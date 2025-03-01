@@ -1,0 +1,76 @@
+/*gpt did css*/
+
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  background-color: #1e1e1e;
+  color: white;
+  margin: 0;
+}
+
+.completed {
+  text-decoration: line-through;
+  color: gray;
+}
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px;
+  background: linear-gradient(to bottom, #333, #222);
+  border-bottom: 2px solid #444;
+  position: relative;
+}
+
+.plus-button {
+  font-size: 24px;
+  padding: 5px 10px;
+  cursor: pointer;
+  background: #555;
+  color: white;
+  border: none;
+  border-radius: 5px;
+}
+
+.header-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.delete-button {
+  background: none;
+  border: none;
+  color: red;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.dropdown-menu {
+  position: absolute;
+  background: #333;
+  border: 1px solid #555;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 5px;
+}
+
+.dropdown-menu input {
+  margin-bottom: 5px;
+  padding: 5px;
+  background: #222;
+  color: white;
+  border: 1px solid #444;
+}
+
+.dropdown-menu button {
+  background: #555;
+  color: white;
+  border: none;
+  padding: 5px;
+  cursor: pointer;
+}
