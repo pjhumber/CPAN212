@@ -1,106 +1,102 @@
-import { useState, useEffect } from "react";
-import TaskItem from "../components/TaskItem";
-import { auth } from "../firebase";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { getAuth, signOut } from "firebase/auth";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  onSnapshot,
+  deleteDoc,
+  doc,
+  query,
+  where
+} from "firebase/firestore";
+import TaskItem from "../components/TaskItem";
+import "../App.css";
 
-function Dashboard() {
-    const [tasks, setTasks] = useState([]);
-    const [taskText, setTaskText] = useState("");
-    const [dropdownOpen, setDropdownOpen] = useState(false);
-    const navigate = useNavigate();
+export default function Dashboard() {
+  const [taskText, setTaskText] = useState("");
+  const [tasks, setTasks] = useState([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const navigate = useNavigate();
+  const auth = getAuth();
+  const user = auth.currentUser;
+  const db = getFirestore(); //likely redunant keepin just incase idk
 
-    useEffect(() => {
-        if (!auth.currentUser) {
-            navigate("/login");
-        }
-    }, [navigate]);
-
-    let uid = null;
-    if (auth.currentUser) {
-        uid = auth.currentUser.uid;
+  useEffect(() => {
+    if (!user) {
+      navigate("/");
+      return;
     }
 
-    useEffect(() => {
-        const loadTasks = async () => {
-            if (uid !== null) {
-                const res = await fetch(`http://localhost:5000/tasks/${uid}`);
-                const data = await res.json();
-                setTasks(data);
-            }
-        };
-        loadTasks();
-    }, [uid]);
+    const q = query(collection(db, "tasks"), where("uid", "==", user.uid));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const loadedTasks = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setTasks(loadedTasks);
+    });
 
-    const addTask = async () => {
-        if (taskText.trim() !== "") {
-            if (uid !== null) {
-                const res = await fetch("http://localhost:5000/tasks", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({ text: taskText, uid: uid })
-                });
-                const newTask = await res.json();
-                const updatedTasks = [...tasks, newTask];
-                setTasks(updatedTasks);
-                setTaskText("");
-                setDropdownOpen(false);
-            }
-        }
-    };
+    return () => unsubscribe();
+  }, [user, db, navigate]);
 
-    const deleteTask = async (taskId) => {
-        if (uid !== null) {
-            await fetch(`http://localhost:5000/tasks/${uid}/${taskId}`, {
-                method: "DELETE"
-            });
-            const updated = tasks.filter((task) => {
-                if (task.id !== taskId && task._id !== taskId) {
-                    return true;
-                } else {
-                    return false;
-                }
-            });
-            setTasks(updated);
-        }
-    };
+  const addTask = async () => {
+    if (taskText.trim() === "") return;
+  
+    await addDoc(collection(db, "tasks"), {
+      uid: user.uid,
+      text: taskText,
+      completed: false
+    });
+  
+    setTaskText("");
+    setDropdownOpen(false);
+  };
+  
 
-    const handleLogout = () => {
-        auth.signOut().then(() => {
-            navigate("/login");
-        });
-    };
+  const deleteTask = async (taskId) => {
+    const taskDoc = doc(db, "tasks", taskId);
+    await deleteDoc(taskDoc);
+  };
+  
 
-    return (
-        <div className="dashboard">
-            <div className="top-bar">
-                <button className="plus-button" onClick={() => setDropdownOpen(!dropdownOpen)}>+</button>
-                <h2 className="header-title">Notes</h2>
-                <button onClick={handleLogout}>Logout</button>
-            </div>
-            {dropdownOpen && (
-                <div className="dropdown-menu">
-                    <input
-                        type="text"
-                        value={taskText}
-                        onChange={(e) => setTaskText(e.target.value)}
-                        placeholder="Enter a note"
-                    />
-                    <button onClick={addTask}>Create Note</button>
-                </div>
-            )}
-            <ul>
-                {tasks.map((task) => (
-                    <TaskItem
-                        key={task._id || task.id}
-                        task={task}
-                        deleteTask={() => deleteTask(task._id || task.id)}
-                    />
-                ))}
-            </ul>
+  const handleLogout = () => {
+    signOut(auth).then(() => navigate("/"));
+  };
+
+  return (
+    <div className="dashboard">
+      <div className="top-bar">
+        <button
+          className="plus-button"
+          onClick={() => setDropdownOpen(!dropdownOpen)}
+        >
+          +
+        </button>
+        <h2 className="header-title">Notes</h2>
+        <button onClick={handleLogout}>Logout</button>
+      </div>
+      {dropdownOpen && (
+        <div className="dropdown-menu">
+          <input
+            type="text"
+            value={taskText}
+            onChange={(e) => setTaskText(e.target.value)}
+            placeholder="Enter a note"
+          />
+          <button onClick={addTask}>Create Note</button>
         </div>
-    );
+      )}
+      <ul>
+        {tasks.map((task) => (
+          <TaskItem
+            key={task.id}
+            task={task}
+            deleteTask={() => deleteTask(task.id)}
+          />
+        ))}
+      </ul>
+    </div>
+  );
 }
-
-export default Dashboard;
