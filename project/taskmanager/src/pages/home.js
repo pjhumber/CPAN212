@@ -1,3 +1,4 @@
+//simple rename from 'Home.js' to all lowercase to prevent importing issues
 import { useNavigate } from "react-router-dom";
 
 function Home() {
