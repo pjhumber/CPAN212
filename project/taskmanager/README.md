@@ -14,7 +14,7 @@ tech:
     frontend: react, js and react router
     authentication: firebase 
     database: firebase
-    backend: nodejs and expressjs
+    backend: nodejs
     
 
 run guide:
@@ -25,4 +25,4 @@ run guide:
 
 
 
-recently updated, might be missing some info
+recently updated the code, might be missing some info
